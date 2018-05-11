@@ -1,14 +1,9 @@
+const args = require('./config');
 const convertToJson = require('./csv2json');
 const utils = require('./utils');
+const lodash = require('lodash');
 
-const destination = process.argv[3] || 'csv';
-
-if (destination !== 'csv' && destination !== 'db') {
-  console.error('Destination not supported');
-  return process.exit(1);
-}
-
-convertToJson(process.argv[2], false, (error, parsedData) => {
+convertToJson(args.input, false, (error, parsedData) => {
   if (error) {
     return console.error(error);
   }
@@ -31,19 +26,19 @@ convertToJson(process.argv[2], false, (error, parsedData) => {
       }
 
       values.forEach(value => {
-        processedData[key] = [...processedData[key], value];
+        processedData[key] = lodash.union(processedData[key], [value]);
       });
     });
   });
 
-  switch (destination) {
+  switch (args.output) {
     case 'csv':
     console.log('Saving to a csv file');
       utils.toCsv(processedData, 'mx_diag_nopos.csv', ['cod_empresa','cod_generico','cod_diagnostico','estado_nopos']);
       break;
     case 'db':
-      console.log('TODO');
-      // utils.toDb(processedData, 'dbname', 'connectionData');
+      console.log('INSERTING TO DB');
+      utils.toDb(processedData);
       break;
     default:
       console.log('Unknown Destination');
